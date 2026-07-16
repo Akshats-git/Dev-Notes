@@ -502,6 +502,241 @@ Soft Copy vs Hard Copy:
   Mutating b mutates a!              Mutating b does NOT affect a
 ```
 
+### slice — extract a portion without modifying the original
+
+`slice(start, end)` returns a new array containing items from index `start` up to (but **not including**) index `end`. The original array is never touched. If you omit `end`, it goes all the way to the last element.
+
+```js
+let teas = ["green tea", "black tea", "oolong tea", "chai", "masala"];
+
+teas.slice(1, 3);  // → ["black tea", "oolong tea"]
+//                         index 1        index 2    (index 3 is excluded)
+
+teas.slice(2);     // → ["oolong tea", "chai", "masala"]  (from index 2 to end)
+teas.slice(-2);    // → ["chai", "masala"]  (negative index = count from the end)
+
+console.log(teas); // → original is untouched
+```
+
+`slice` with no arguments is one of the standard ways to make a **hard copy** of an array:
+
+```js
+let hardCopy = teas.slice();  // copy of the whole array
+```
+
+```
+slice visualised on ["green tea", "black tea", "oolong tea", "chai"]:
+
+   index:    0            1            2            3
+          ┌──────────┬──────────┬───────────┬──────┐
+          │ green tea│ black tea│ oolong tea│ chai │
+          └──────────┴──────────┴───────────┴──────┘
+                     ↑                      ↑
+              slice(1, 3) starts here  ends before here
+              result → ["black tea", "oolong tea"]
+```
+
+### splice — add, remove, or replace items in place
+
+`splice(start, deleteCount, ...itemsToInsert)` **mutates the original array**. It removes `deleteCount` elements starting at `start`, and optionally inserts new elements in their place. It returns an array of the deleted elements.
+
+```js
+let cities = ["London", "Paris", "Tokyo", "Berlin", "Sydney"];
+
+// Remove 2 elements starting at index 1
+let removed = cities.splice(1, 2);
+// removed → ["Paris", "Tokyo"]
+// cities  → ["London", "Berlin", "Sydney"]  ← original is changed
+
+// Insert without removing (deleteCount = 0)
+cities.splice(1, 0, "Mumbai", "Dubai");
+// cities → ["London", "Mumbai", "Dubai", "Berlin", "Sydney"]
+
+// Replace 1 element at index 2
+cities.splice(2, 1, "Cairo");
+// cities → ["London", "Mumbai", "Cairo", "Berlin", "Sydney"]
+```
+
+```
+splice vs slice — the one-line distinction:
+
+  slice  →  NON-destructive — returns a new array, original untouched
+  splice →  DESTRUCTIVE      — mutates the original, returns what was removed
+```
+
+A good memory trick: **sl-I-ce** = non-destructive (i = isolated copy), **sp-L-ice** = in-pLace mutation.
+
+### shift & unshift — add/remove from the front
+
+`push`/`pop` work on the **end** of an array. `unshift`/`shift` do the same thing but at the **beginning**. They're slower than push/pop on large arrays because every existing element has to be re-indexed, but for small arrays it doesn't matter.
+
+```js
+let queue = ["first", "second", "third"];
+
+// shift — remove and return the first element
+let served = queue.shift();
+// served → "first"
+// queue  → ["second", "third"]
+
+// unshift — add one or more elements to the front
+queue.unshift("new first", "new second");
+// queue → ["new first", "new second", "second", "third"]
+```
+
+```
+push / pop  vs  unshift / shift:
+
+  unshift("x") ──►  [ x | a | b | c ]  ◄── push("x")
+  shift()      ◄──  [ a | b | c | x ]  ──► pop()
+                  removes from front        removes from end
+```
+
+### indexOf & lastIndexOf — find the position of a value
+
+`indexOf` returns the index of the **first** occurrence of a value, or `-1` if it isn't found. `lastIndexOf` starts searching from the end. Use these when you need the *position*, not just whether the value exists.
+
+```js
+let teas = ["chai", "green tea", "chai", "oolong"];
+
+teas.indexOf("chai");        // 0  — first occurrence
+teas.lastIndexOf("chai");    // 2  — last occurrence
+teas.indexOf("black tea");   // -1 — not found
+
+// Common pattern: check if something exists
+if (teas.indexOf("chai") !== -1) {
+  console.log("chai is in the list");
+}
+// (includes() is cleaner for existence checks; indexOf is for when you need the position)
+```
+
+### find & findIndex — search with a condition
+
+Unlike `indexOf` (which matches by exact value), `find` and `findIndex` accept a callback and return the **first element/index** that satisfies your condition. Essential when searching arrays of objects.
+
+```js
+let users = [
+  { id: 1, name: "Hitesh" },
+  { id: 2, name: "Chai"   },
+  { id: 3, name: "Alice"  },
+];
+
+// find — returns the element itself, or undefined
+let user = users.find((u) => u.id === 2);
+// → { id: 2, name: "Chai" }
+
+// findIndex — returns the index, or -1
+let idx = users.findIndex((u) => u.name === "Alice");
+// → 2
+```
+
+### map — transform every element into something new
+
+`map` runs a callback on each element and returns a **new array** of the results. The original array is unchanged. This is one of the most used array methods in JavaScript — you'll use it constantly to transform data.
+
+```js
+let prices    = [100, 200, 300];
+let discounted = prices.map((price) => price * 0.9);
+// → [90, 180, 270]  — original prices array untouched
+
+let teas = ["green tea", "chai", "oolong"];
+let upper = teas.map((tea) => tea.toUpperCase());
+// → ["GREEN TEA", "CHAI", "OOLONG"]
+```
+
+### filter — keep only elements that pass a test
+
+`filter` runs a callback on each element and returns a **new array** containing only the elements for which the callback returned `true`. Think of it as picking items from a list based on a rule.
+
+```js
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8];
+
+let evens = numbers.filter((n) => n % 2 === 0);
+// → [2, 4, 6, 8]
+
+let cities = [
+  { name: "London",   pop: 8900000 },
+  { name: "Paris",    pop: 2200000 },
+  { name: "Tokyo",    pop: 9000000 },
+];
+
+let largeCities = cities.filter((city) => city.pop > 3000000);
+// → [{ name: "London", ... }, { name: "Tokyo", ... }]
+```
+
+### reduce — collapse an array into a single value
+
+`reduce` iterates through the array, carrying an **accumulator** value that you update on each step. At the end, it returns the final accumulated value. It's the most flexible array method — you can implement map, filter, or anything else with it — but it takes a moment to get comfortable with.
+
+```js
+let numbers = [1, 2, 3, 4, 5];
+
+// accumulator starts at 0, adds each number
+let total = numbers.reduce((accumulator, current) => accumulator + current, 0);
+// step 1: acc=0,  current=1  → 0+1  = 1
+// step 2: acc=1,  current=2  → 1+2  = 3
+// step 3: acc=3,  current=3  → 3+3  = 6
+// step 4: acc=6,  current=4  → 6+4  = 10
+// step 5: acc=10, current=5  → 10+5 = 15
+// total → 15
+```
+
+The second argument to `reduce` (`0` above) is the **initial value** of the accumulator. Always provide it — without it, reduce uses the first element as the initial value, which can cause bugs.
+
+### some & every — boolean checks across the array
+
+`some` returns `true` if **at least one** element passes the test. `every` returns `true` only if **all** elements pass. Both stop early once they have their answer — `some` stops at the first `true`, `every` stops at the first `false`.
+
+```js
+let scores = [45, 72, 88, 31, 95];
+
+scores.some((s) => s > 90);   // true  — 95 passes, stops there
+scores.every((s) => s > 30);  // true  — all are above 30
+scores.every((s) => s > 50);  // false — 45 and 31 fail
+```
+
+### sort — reorder elements in place
+
+`sort` mutates the original array and reorders its elements. By default (no callback), it converts everything to strings and sorts alphabetically — this gives **wrong results for numbers**, so always pass a comparator function when sorting numbers.
+
+```js
+let teas = ["oolong", "chai", "green tea", "black tea"];
+teas.sort();
+// → ["black tea", "chai", "green tea", "oolong"]  (alphabetical ✅)
+
+let scores = [10, 9, 100, 21, 3];
+scores.sort();                         // → [10, 100, 21, 3, 9]  ❌ string sort!
+scores.sort((a, b) => a - b);          // → [3, 9, 10, 21, 100]  ✅ numeric ascending
+scores.sort((a, b) => b - a);          // → [100, 21, 10, 9, 3]  ✅ numeric descending
+```
+
+The comparator `(a, b) => a - b` works by the rule: negative = `a` comes first, positive = `b` comes first, zero = same order.
+
+### join — turn an array into a string
+
+`join` takes all elements, converts them to strings, and concatenates them with a separator you choose. The reverse of `"string".split(separator)`.
+
+```js
+let words = ["JavaScript", "is", "fun"];
+words.join(" ");    // → "JavaScript is fun"
+words.join(", ");   // → "JavaScript, is, fun"
+words.join("-");    // → "JavaScript-is-fun"
+words.join("");     // → "JavaScriptisfun"
+```
+
+### reverse — flip the array in place
+
+`reverse` mutates the original array, reversing the order of its elements.
+
+```js
+let letters = ["a", "b", "c", "d"];
+letters.reverse();
+// → ["d", "c", "b", "a"]  — original array is now reversed
+
+// Common pattern: sort then reverse for descending order without a comparator
+["banana", "apple", "cherry"].sort().reverse();
+// → ["cherry", "banana", "apple"]
+```
+
 ### Merging Arrays
 
 Use `concat()` or the spread operator to combine two arrays into a new one.
@@ -514,6 +749,33 @@ let worldCities = europeanCities.concat(asianCities);
 // or equivalently:
 let worldCities = [...europeanCities, ...asianCities];
 // → ["Paris", "Rome", "Tokyo", "Bangkok"]
+```
+
+### Quick method reference
+
+```
+  Method          Mutates?   Returns              Use when...
+  ─────────────   ────────   ──────────────────   ──────────────────────────────────
+  push(x)         ✅ yes     new length           adding to the end
+  pop()           ✅ yes     removed element      removing from the end
+  unshift(x)      ✅ yes     new length           adding to the front
+  shift()         ✅ yes     removed element      removing from the front
+  splice(i,n,x)   ✅ yes     removed elements     inserting/removing anywhere
+  sort(fn)        ✅ yes     sorted array         reordering in place
+  reverse()       ✅ yes     reversed array       flipping order in place
+
+  slice(s,e)      ❌ no      new array            extracting a portion
+  concat(arr)     ❌ no      new merged array     combining arrays
+  map(fn)         ❌ no      new transformed arr  transforming every element
+  filter(fn)      ❌ no      new filtered array   keeping elements that pass a test
+  reduce(fn,init) ❌ no      single value         summing, grouping, aggregating
+  find(fn)        ❌ no      element or undefined finding first match by condition
+  findIndex(fn)   ❌ no      index or -1          finding position by condition
+  indexOf(x)      ❌ no      index or -1          finding position by exact value
+  includes(x)     ❌ no      true / false         checking if a value exists
+  join(sep)       ❌ no      string               converting array to string
+  some(fn)        ❌ no      true / false         checking if any element passes
+  every(fn)       ❌ no      true / false         checking if all elements pass
 ```
 
 ---
@@ -1225,22 +1487,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("domStatus").textContent = "DOM fully loaded";
 });
 ```
-
-> **Why `function` and not an arrow function here?** Inside an event listener, a regular `function` binds `this` to the element the listener is attached to (the same as `event.currentTarget`). This is a convenient, built-in reference to the element that fired the handler. Arrow functions do **not** get their own `this` — they inherit it from the surrounding scope (usually `window` or `undefined`), so you lose that reference.
-
-```js
-// Regular function — `this` is the button that was clicked
-button.addEventListener("click", function () {
-  this.classList.toggle("active");   // ✅ `this` = the button
-});
-
-// Arrow function — `this` is NOT the button
-button.addEventListener("click", () => {
-  this.classList.toggle("active");   // ❌ `this` = outer scope (window), not the button
-});
-```
-
-If you don't rely on `this` (you can always use `event.target` / `event.currentTarget` instead), an arrow function is perfectly fine. But when you want `this` to point at the element, use a regular `function`. See [section 15](#15-this--context) for the full `this` rules.
 
 ### Event Delegation
 
