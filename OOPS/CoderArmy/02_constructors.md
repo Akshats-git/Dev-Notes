@@ -61,6 +61,99 @@ class Car {
 Car c = new Car(); // compile error, no matching constructor
 ```
 
+### What "the parent constructor" means
+
+Every constructor in Java must, as its very first action, run a constructor of its superclass. If you do not write that call yourself, the compiler inserts `super();` for you. So the "parent constructor" is simply the constructor of the class you extend.
+
+```java
+class Dog {
+    Dog() { }          // what you wrote
+}
+
+class Dog {
+    Dog() {
+        super();       // what the compiler actually compiles
+    }
+}
+```
+
+### But what if the class has no parent
+
+It always has one. If a class does not say `extends`, the compiler treats it as `extends Object`. `Object` is the root of every class hierarchy and it has a public no-argument constructor, so the implicit `super()` resolves to `Object()`, which does essentially nothing. The chain always terminates at `Object`:
+
+```
+Puppy() -> Dog() -> Animal() -> Object()
+```
+
+So the question "what if there is no parent constructor" never applies to the *absence of a parent*. It applies to a parent that has no **no-argument** constructor, which is a different and much more common situation.
+
+### The case that actually breaks compilation
+
+Remember the rule from above: the compiler adds a default constructor only if you wrote no constructor at all. So the moment a parent declares a parameterized constructor, it loses its free no-arg one.
+
+```java
+class Animal {
+    String name;
+    Animal(String name) {     // a constructor is written...
+        this.name = name;     // ...so Animal() no longer exists
+    }
+}
+
+class Dog extends Animal {    // compiler tries to insert Dog() { super(); }
+}
+```
+
+This does not compile:
+
+```
+error: constructor Animal in class Animal cannot be applied to given types;
+  required: String
+  found:    no arguments
+```
+
+The implicit `super()` has nothing to bind to. The same error appears if the parent's no-arg constructor exists but is `private`, it exists but is not accessible from the subclass.
+
+Two ways to fix it. Either call the parent constructor explicitly:
+
+```java
+class Dog extends Animal {
+    Dog(String name) {
+        super(name);          // explicit, so no implicit super() is inserted
+    }
+}
+```
+
+Or give the parent a no-argument constructor of its own:
+
+```java
+class Animal {
+    String name;
+    Animal() { this.name = "unknown"; }   // now the implicit super() works again
+    Animal(String name) { this.name = name; }
+}
+```
+
+### How this() interacts with it
+
+`this(...)` also counts as the first statement, so it suppresses the implicit `super()` and defers the parent call to whichever constructor it delegates to.
+
+```java
+class Dog extends Animal {
+    Dog() {
+        this("Rex");          // no implicit super() here
+    }
+    Dog(String name) {
+        super(name);          // the parent constructor runs here instead
+    }
+}
+```
+
+The parent constructor still runs exactly once, just one step later in the chain. Full detail on the inheritance chain and its execution order is in the inheritance note.
+
+### A small accuracy point on the default constructor
+
+The default constructor is often described as "public". More precisely, it gets the same access level as the class itself. A `public class` gets a public default constructor, a package-private class gets a package-private one.
+
 ## Constructor overloading
 
 A class can have multiple constructors as long as their parameter lists are different (different number or different types of parameters). This is called constructor overloading.
@@ -169,7 +262,13 @@ This is a favorite interview follow up question after constructors, so it is wor
 Yes. It is commonly used to prevent object creation from outside the class, as seen in the Singleton pattern.
 
 **Q: What happens if you do not write any constructor?**
-The compiler inserts a public no-argument default constructor automatically.
+The compiler inserts a no-argument default constructor automatically, whose body is just a call to the parent constructor. Its access level matches the class's own.
+
+**Q: What is the parent constructor that the default constructor calls?**
+The constructor of the superclass. If the class does not extend anything, its superclass is `Object`, so `super()` calls `Object()`. Every constructor chain ends at `Object`.
+
+**Q: What happens if the parent class has no no-argument constructor?**
+The implicit `super()` has nothing to bind to and the code fails to compile. You must either call `super(args)` explicitly in the subclass constructor, or add a no-argument constructor to the parent.
 
 **Q: If you write a parameterized constructor, does the default no-arg constructor still exist?**
 No. Once you write any constructor yourself, Java stops generating the default one. You must write your own no-arg constructor if you still need one.
@@ -186,8 +285,10 @@ No, treat it as a different construct. It has no return type and is invoked only
 ## Quick summary
 
 - Constructor initializes an object, name matches class, no return type.
-- If no constructor is written, Java provides a public no-arg default constructor.
+- If no constructor is written, Java provides a no-arg default constructor, with the same access level as the class.
 - Writing any constructor removes the automatic default one.
 - Constructor overloading means multiple constructors with different parameter lists.
 - Constructor chaining means one constructor calling another using this(...), must be the first line.
+- Every constructor starts with an implicit super(), so the parent is always built first. A class with no extends has Object as its parent, and every chain ends at Object().
+- If the parent has no accessible no-arg constructor, that implicit super() is a compile error. Fix it with an explicit super(args) or by adding a no-arg constructor to the parent.
 - this refers to the current object, used to resolve naming conflicts, chain constructors, or pass the object itself somewhere.
