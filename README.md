@@ -16,6 +16,7 @@ My notes from learning different languages and tools. One folder per topic. I wr
 | OOP in Java | [OOPS/CoderArmy](OOPS/CoderArmy) (10 parts, start at [01_classes_objects_and_new_keyword.md](OOPS/CoderArmy/01_classes_objects_and_new_keyword.md)) |
 | Forward Deployed Engineering (GenAI) | [FDE/CoderArmy](FDE/CoderArmy) (15 parts, start at [00-index.md](FDE/CoderArmy/00-index.md)) |
 | Backend from First Principles | [Backend-From-First-Principles](Backend-From-First-Principles) (28 parts, start at [00-index.md](Backend-From-First-Principles/00-index.md)) |
+| Model Context Protocol (MCP) | [MCP/CampusX](MCP/CampusX) (9 parts, start at [00-index.md](MCP/CampusX/00-index.md)) |
 
 Kafka folder is empty for now. Notes coming later.
 
